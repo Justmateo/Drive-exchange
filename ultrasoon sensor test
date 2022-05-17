@@ -5,7 +5,7 @@
 Serial pc(USBTX, USBRX);
 Timer timer;
 
-float getDistance_mm();
+float getDistance_cm();
 float Ultra_cm(void);
 
 PinName pin_ECHO = PB_7; // Echo
@@ -19,8 +19,7 @@ int main() {
 
     while(1) {
         dist = Ultra_cm();
-        wait(0.5);
-        pc.printf("Distance: %5.1f mm\n\r", Ultra.getDistance_mm());
+        pc.printf("Distance: %5.1f cm\n\r", Ultra.getDistance_cm());
         wait_ms(100 - timer.read_ms()); // time the loop
     }
 }
