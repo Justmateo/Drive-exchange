@@ -1,0 +1,61 @@
+#include "mbed.h"
+#include <cstdio>
+
+
+AnalogIn lijnsensor1(A0);
+AnalogIn lijnsensor2(A2);
+AnalogIn adc_vref();
+
+DigitalOut led1(LED1);
+DigitalOut led2(D2);
+float a = 0;
+float b = 0;
+float c = 0;
+float d = 0;
+
+int main()
+{
+    printf("line seeing is\n");
+
+    while(1) {
+        
+    a = lijnsensor1;
+    b = lijnsensor1;
+    c = lijnsensor2;
+    d = lijnsensor2;
+    printf("%.3f\n",a);
+    printf("%.3f\n",c);
+     //led is uit als de afstand groter is dan +- 1cm op wite opervlakte
+    if(b >= 0.3)
+        {
+        led1 = 0;
+        wait_us(100000);
+        printf("line off1\n");
+        
+        }    
+        //led is aan als de afstand +- 1cm is     
+    else if(a < 0.3)
+        {        
+        led1 = 1;
+        wait_us(100000);
+        printf("line on1\n");
+        
+        }
+    else if(d >= 0.3)
+        {
+        led2 = 0;
+        wait_us(100000);
+        printf("line off2\n");
+        
+        }    
+        //led is aan als de afstand +- 1cm is     
+    else if(c < 0.3)
+        {        
+        led2 = 1;
+        wait_us(100000);
+        printf("line on2\n");
+        
+        }
+
+    }
+}
