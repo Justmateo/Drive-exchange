@@ -8,8 +8,8 @@ Timer timer;
 float getDistance_cm();
 float Ultra_cm(void);
 
-PinName pin_ECHO = PB_7; // Echo
-PinName pin_TRIG = PB_0; // Trig
+PinName pin_ECHO = PB_7; // Echo pin
+PinName pin_TRIG = PB_0; // Trigger pin
 
 HCSR04 Ultra(pin_ECHO, pin_TRIG); // Sensor
 
@@ -18,13 +18,13 @@ int main() {
  
 
     while(1) {
-        dist = Ultra_cm();
+        dist = Ultra_cm();  // Zet dist terug naar 0
         pc.printf("Distance: %5.1f cm\n\r", Ultra.getDistance_cm());
         wait_ms(100 - timer.read_ms()); // time the loop
     }
 }
 
-float Ultra_cm(void)
+float Ultra_cm(void)    // Start meeting
 {
     Ultra.startMeasurement();
 
