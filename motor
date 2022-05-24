@@ -8,6 +8,20 @@ DigitalOut Mrechtsachteruit(A5);       //rechter motor naar achter rijden
 PwmOut PWMlinks(A2);                //pwm output signaal linkerwiel
 PwmOut PWMrechts(A3);               //pwm output signaal rechterwiel
 
+void Vooruit () {
+    Mlinksvooruit=1;           // welke kant draait de linker motor op
+    Mlinksachteruit=0;
+    
+    PWMlinks.period(0.001);   // Periode tijd instellen PWMlinks
+    PWMlinks=0.3  ;           // Dutycycle instellen PWMlinks
+    
+    Mrechtsvooruit=1;
+    Mrechtsachteruit=0;
+    
+    PWMlinks.period(0.001);
+    PWMlinks=0.3 ;
+}
+
 void Rechts (){
     Mlinksvooruit=1;           // welke kant draait de linker motor op
     Mlinksachteruit=0;
@@ -22,19 +36,6 @@ void Rechts (){
     PWMlinks=0.3 ;
 }
 
-void Vooruit () {
-    Mlinksvooruit=1;           // welke kant draait de linker motor op
-    Mlinksachteruit=0;
-    
-    PWMlinks.period(0.001);   // Periode tijd instellen PWMlinks
-    PWMlinks=0.3  ;           // Dutycycle instellen PWMlinks
-    
-    Mrechtsvooruit=1;
-    Mrechtsachteruit=0;
-    
-    PWMlinks.period(0.001);
-    PWMlinks=0.3 ;
-}
 
 void Links () {
     Mlinksvooruit=1;           // welke kant draait de linker motor op
@@ -50,10 +51,6 @@ void Links () {
     PWMlinks=0.3 ;
 }
 
-Void Rechts() {
-}
-Void Midden() {
-{
 
 int main()
 {
@@ -66,7 +63,7 @@ int main()
     Mrechtsvooruit=1;
     Mrechtsachteruit=0;
     
-    PWMlinks.period(0.001);
-    PWMlinks=0.3 ;
+    PWMrechts.period(0.001);
+    PWMrechts=0.3 ;
     
 }
