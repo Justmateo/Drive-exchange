@@ -63,5 +63,10 @@ int main()
     PWMlinks.period(0.001);   // Periode tijd instellen PWMlinks
     PWMlinks=0.3  ;           // Dutycycle instellen PWMlinks
     
+    Mrechtsvooruit=1;
+    Mrechtsachteruit=0;
+    
+    PWMlinks.period(0.001);
+    PWMlinks=0.3 ;
     
 }
