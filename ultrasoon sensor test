@@ -19,8 +19,8 @@ int main() {
 
     while(1) {
         dist = Ultra_cm();  // Zet dist terug naar 0
-        pc.printf("Distance: %5.1f cm\n\r", Ultra.getDistance_cm());
-        wait_ms(100 - timer.read_ms()); // time the loop
+        pc.printf("Distance: %5.1f cm\n\r", Ultra.getDistance_cm());    //Test resultaat
+        wait_ms(100 - timer.read_ms()); 
     }
 }
 
