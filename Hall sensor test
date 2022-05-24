@@ -1,0 +1,30 @@
+#include "mbed.h"
+
+
+Serial pc(USBTX, USBRX);
+
+DigitalOut led1(LED1);
+AnalogIn hall(PA_1);
+float pa(0);
+
+
+
+int main()
+{
+    
+    while(true)
+    {
+        pa = hall;
+        pc.printf("waarde: %0.4f cm\n\r", pa);  //Test scherm
+        wait_us(500);
+        
+        if(pa < 0.6475    ||  pa > 0.6750)  //Gevoeligheid sensor
+        {
+                led1 = true;
+        }
+        else
+        {
+            led1 = false;
+        }
+    }
+}
