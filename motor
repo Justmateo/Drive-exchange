@@ -1,0 +1,19 @@
+#include "mbed.h"
+
+DigitalOut Mlinksvooruit(A0);          //linker motor naar voren rijden
+DigitalOut Mlinksachteruit(A1);        //linker motor naar achter rijden
+DigitalOut Mrechtsvooruit(A4);         //rechter motor naar voren rijden
+DigitalOut Mrechtsachteruit(A5);       //rechter motor naar achter rijden
+
+PwmOut PWMlinks(A2);                //pwm output signaal linkerwiel
+PwmOut PWMrechts(A3);               //pwm output signaal rechterwiel
+
+int main()
+{
+    Mlinksvooruit=1;           // welke kant draait de linker motor op
+    Mlinksachteruit=0;
+    
+    PWMlinks.period(0.001);   // Periode tijd instellen PWMlinks
+    PWMlinks=0.3  ;           // Dutycycle instellen PWMlinks
+
+}
