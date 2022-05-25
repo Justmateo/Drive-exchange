@@ -1,1 +1,81 @@
-test
+#include "mbed.h"
+Ticker rechts;
+Ticker links;
+DigitalOut Mlinksvooruit(A0);          //linker motor naar voren rijden
+DigitalOut Mlinksachteruit(A1);        //linker motor naar achter rijden
+DigitalOut Mrechtsachteruit(A4);         //rechter motor naar voren rijden
+DigitalOut Mrechtsvooruit(A5);       //rechter motor naar achter rijden
+
+PwmOut PWMlinks(A2);                //pwm output signaal linkerwiel
+PwmOut PWMrechts(A3);               //pwm output signaal rechterwiel
+
+float Speedrechts(0.6); //de snelheid voor afremmende wiel
+float Speedlinks(0.9);  //de snelheid voor afremmende wiel
+float plus (0.1);
+float remwaarde (0);
+float minimaalSpeedlinks(0);
+
+void Vooruit () {
+    Mlinksvooruit=1;           // welke kant draait de linker motor op
+    Mlinksachteruit=0;
+    
+    PWMlinks.period(0.001);   // Periode tijd instellen PWMlinks
+    PWMlinks= 0.3 ;           // Dutycycle instellen PWMlinks
+    
+    Mrechtsvooruit=1;
+    Mrechtsachteruit=0;
+    
+    PWMrechts.period(0.001);
+    PWMrechts=0.3 ;
+}
+
+void Rechts (){
+    Mlinksvooruit=1;           // welke kant draait de linker motor op
+    Mlinksachteruit=0;
+    
+    PWMlinks.period(0.001);   // Periode tijd instellen PWMlinks
+    PWMlinks=0.9  ;           // Dutycycle instellen PWMlinks
+    
+    Mrechtsvooruit=1;
+    Mrechtsachteruit=0;
+    
+    PWMrechts.period(0.001);
+    PWMrechts=Speedrechts ;
+}
+
+
+void Links () {
+    Mlinksvooruit=1;           // welke kant draait de linker motor op
+    Mlinksachteruit=0;
+    
+    PWMlinks.period(0.001);   // Periode tijd instellen PWMlinks
+    PWMlinks=Speedlinks  ;           // Dutycycle instellen PWMlinks
+  
+    
+    Mrechtsvooruit=1;
+    Mrechtsachteruit=0;
+    
+    PWMrechts.period(0.001);
+    PWMrechts=0.9 ;
+}
+
+void Min (){
+    if (minimaalSpeedlinks < 6)
+    {
+    remwaarde = remwaarde + plus;
+    minimaalSpeedlinks = minimaalSpeedlinks + 1;
+    }
+
+}
+
+int main(){
+   minimaalSpeedlinks = 0;
+    while(1){
+    wait (1);
+    Links ();
+    Speedlinks = Speedlinks - remwaarde; 
+    links.attach(&Min, 1.0);
+    
+    }
+    
+}
