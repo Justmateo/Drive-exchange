@@ -1,0 +1,169 @@
+#include "mbed.h"
+
+enum RICHTING{RECHTDOOR,LINKS,RECHTS,AFLEVEREN,DEFAULT};
+
+RICHTING richting;
+
+DigitalOut Mlinksvooruit(D5);          //linker motor naar voren rijden
+DigitalOut Mlinksachteruit(D6);        //linker motor naar achter rijden
+DigitalOut Mrechtsachteruit(D7);         //rechter motor naar voren rijden
+DigitalOut Mrechtsvooruit(D8);       //rechter motor naar achter rijden
+
+DigitalOut led1(LED1);              //controle leds om te zien of de sensoren werken
+DigitalOut led2(D2);
+
+AnalogIn lijnsensorlinks(A0);           //input signaal lijnsensoren
+AnalogIn lijnsensorrechts(A1);
+
+PwmOut PWMlinks(D0);                //pwm output signaal linkerwiel
+PwmOut PWMrechts(D1);               //pwm output signaal rechterwiel
+
+float a = 0;
+float b = 0;
+float c = 0;
+float d = 0;
+
+
+void Vooruit () {
+    Mlinksvooruit=1;           // welke kant draait de linker motor op
+    Mlinksachteruit=0;
+    
+    PWMlinks.period(0.001);   // Periode tijd instellen PWMlinks
+    PWMlinks= 0.3 ;           // Dutycycle instellen PWMlinks
+    
+    Mrechtsvooruit=1;
+    Mrechtsachteruit=0;
+    
+    PWMrechts.period(0.001);
+    PWMrechts=0.3 ;
+}
+
+void Rechtsaf (){
+    Mlinksvooruit=1;           // welke kant draait de linker motor op
+    Mlinksachteruit=0;
+    
+    PWMlinks.period(0.001);   // Periode tijd instellen PWMlinks
+    PWMlinks=0.9  ;           // Dutycycle instellen PWMlinks
+    
+    Mrechtsvooruit=1;
+    Mrechtsachteruit=0;
+    
+    PWMrechts.period(0.001);
+    PWMrechts=0.4 ;
+}
+
+
+void Linksaf () {
+    Mlinksvooruit=1;           // welke kant draait de linker motor op
+    Mlinksachteruit=0;
+    
+    PWMlinks.period(0.001);   // Periode tijd instellen PWMlinks
+    PWMlinks=0.4  ;           // Dutycycle instellen PWMlinks
+    
+    Mrechtsvooruit=1;
+    Mrechtsachteruit=0;
+    
+    PWMrechts.period(0.001);
+    PWMrechts=0.9 ;
+}
+
+int walk =+ 1;
+
+int main(){
+    wait (5.0);
+    richting = RECHTDOOR;
+
+
+while(1) {
+        
+    a = lijnsensorlinks;
+    b = lijnsensorrechts;
+    c = lijnsensorlinks;
+    d = lijnsensorrechts;
+
+ 
+switch(richting)
+{ 
+    
+    case RECHTDOOR:
+    
+        Vooruit();
+        if (a < 0.3f)
+        {
+            richting = LINKS;
+        }
+        else if (c < 0.3f)
+        {
+            richting = RECHTS;
+        }
+
+        break;
+    
+    case LINKS:
+    
+    Linksaf();
+        if (c < 0.3f)
+        {
+            richting = RECHTS;
+        }    
+        else if(b >= 0.3f && d >= 0.3f)
+        {
+            richting = RECHTDOOR;
+        }
+    
+    break;
+    {}
+    case RECHTS:
+    Rechtsaf();
+        if (a < 0.3f)
+        {
+            richting = LINKS;
+        }    
+        else if(b >= 0.3f && d >= 0.3f)
+        {
+            richting = RECHTDOOR;
+        }    
+    break;
+        {}
+    case AFLEVEREN:
+    
+    case DEFAULT:
+    break;{}
+}
+    }
+    
+    
+}                                 
+ /*                       //led is uit als de afstand groter is dan +- 1cm op wite opervlakte
+    if(b >= 0.3)
+        {
+        led1 = 0;
+        wait_us(100000);
+        
+        }    
+        //led is aan als de afstand +- 1cm is     
+    else if(a < 0.3)
+        {        
+        led1 = 1;
+        wait_us(100000);
+       
+        
+        }
+    else if(d >= 0.3)
+        {
+        led2 = 0;
+        wait_us(100000);
+        }    
+        //led is aan als de afstand +- 1cm is     
+    else if(c < 0.3)
+        {        
+        led2 = 1;
+        wait_us(100000);
+        
+        }
+
+    }
+    
+    
+}
+*/
