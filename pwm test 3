@@ -1,0 +1,159 @@
+
+#include "mbed.h"
+#include <cstdio>
+
+enum RICHTING{RECHTDOOR,LINKS,RECHTS,AFLEVEREN,DEFAULT};
+
+RICHTING richting;
+
+DigitalOut Mlinksvooruit(D5);          //linker motor naar voren rijden
+DigitalOut Mlinksachteruit(D6);        //linker motor naar achter rijden
+DigitalOut Mrechtsachteruit(D7);         //rechter motor naar voren rijden
+DigitalOut Mrechtsvooruit(D8);       //rechter motor naar achter rijden
+
+DigitalOut led1(LED1);              //controle leds om te zien of de sensoren werken
+DigitalOut led2(D2);
+
+AnalogIn lijnsensorlinks(A0);           //input signaal lijnsensoren
+AnalogIn lijnsensorrechts(A1);
+
+PwmOut PWMlinks(D0);                //pwm output signaal linkerwiel
+PwmOut PWMrechts(D1);               //pwm output signaal rechterwiel
+
+float a = 0;
+float b = 0;
+float c = 0;
+float d = 0;
+
+
+void Vooruit () {
+    Mlinksvooruit=1;           // welke kant draait de linker motor op
+    Mlinksachteruit=0;
+
+    PWMlinks.period(0.001);   // Periode tijd instellen PWMlinks
+    PWMlinks= 0.4 ;           // Dutycycle instellen PWMlinks
+
+    Mrechtsvooruit=1;
+    Mrechtsachteruit=0;
+
+    PWMrechts.period(0.001);
+    PWMrechts=0.4 ;
+}
+
+void Rechtsaf (){
+    Mlinksvooruit=1;           // welke kant draait de linker motor op
+    Mlinksachteruit=0;
+
+    PWMlinks.period(0.001);   // Periode tijd instellen PWMlinks
+    PWMlinks=0.7  ;           // Dutycycle instellen PWMlinks
+
+    Mrechtsvooruit=1;
+    Mrechtsachteruit=0;
+
+    PWMrechts.period(0.001);
+    PWMrechts=0.3 ;
+}
+
+
+void Linksaf () {
+    Mlinksvooruit=1;           // welke kant draait de linker motor op
+    Mlinksachteruit=0;
+
+    PWMlinks.period(0.001);   // Periode tijd instellen PWMlinks
+    PWMlinks=0.3  ;           // Dutycycle instellen PWMlinks
+
+    Mrechtsvooruit=1;
+    Mrechtsachteruit=0;
+
+    PWMrechts.period(0.001);
+    PWMrechts=0.7 ;
+}
+void richtingcheck ()
+{
+    a = lijnsensorlinks;
+    b = lijnsensorrechts;
+    c = lijnsensorlinks;
+    d = lijnsensorrechts;
+    printf("%.3f\n",a);
+    printf("%.3f\n",b);
+    wait_us(200);
+}
+
+int walk =+ 1;
+
+int main(){
+    wait_us (2000000);
+    richting = RECHTDOOR;
+
+
+while(1) 
+{
+wait_us(30000);
+    switch(richting)
+    { 
+
+    case RECHTDOOR:
+        printf("RECHTDOOR\n");
+        richtingcheck();
+        if (a < 0.3f)
+        {
+            richting = LINKS;
+        }
+        else if (b < 0.3f)
+        {
+            richting = RECHTS;
+        }
+        else if (c >= 0.3f && d >= 0.3f)
+        {
+          Vooruit();
+          printf("VOORUIT\n");  
+        }
+
+        break;
+
+    case LINKS:
+        printf("LINKS\n");
+        richtingcheck();
+    
+        if (b < 0.3f)
+        {
+            richting = RECHTS;
+        }    
+        else if(c >= 0.3f && d >= 0.3f)
+        {
+            richting = RECHTDOOR;
+        }
+      
+        Linksaf();
+        printf("linksaf\n");    
+        
+
+    break;
+    {}
+    case RECHTS:
+    printf("RECHTS\n");
+    richtingcheck();
+
+        if (a < 0.3f)
+        {
+            richting = LINKS;
+        }    
+        else if(c >= 0.3f && d >= 0.3f)
+        {
+            richting = RECHTDOOR;
+        }  
+    
+        Rechtsaf();
+        printf("REChtsaf\n");
+         
+    break;
+        {}
+    case AFLEVEREN:
+
+    case DEFAULT:
+    break;{}
+}
+    }
+
+
+}    
