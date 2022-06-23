@@ -4,4 +4,10 @@
             "platform.minimal-printf-enable-floating-point" : true
         }
     }
+
+    "target_overrides": {
+        "*": {
+            "target.printf_lib": "std"
+        }
+    }
 }
