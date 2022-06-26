@@ -1,0 +1,263 @@
+#include "mbed.h"
+#include <cstdio>
+
+enum RICHTING{RECHTDOOR,LINKS,RECHTS,AFLEVEREN,DEFAULT};
+enum EVENT{begin};
+enum AFLEVEREN_MARKER{AAN,UIT};
+
+AFLEVEREN_MARKER afleveren_marker;
+RICHTING richting;
+EVENT event;
+Timer timer;
+Timer timerMeasureUS;
+
+
+DigitalOut led1(LED1);              //controle leds om te zien of de sensoren werken
+DigitalOut led2(D2);
+
+DigitalOut Mlinksomhoog_aflevering(D3);          //linker motor naar voren rijden int 1 en 4 hbrug2
+DigitalOut Mrechtsomhoog_aflevering(D4);        //linker motor naar achter rijden in 2 en 3 hbrug 2
+DigitalOut Mlinksvooruit(D0);          //linker motor naar voren rijden int4 hbrug 1
+DigitalOut Mlinksachteruit(D5);        //linker motor naar achter rijden int3 hbrug 1 
+DigitalOut Mrechtsachteruit(D7);         //rechter motor naar voren rijden int2 hbrug 1
+DigitalOut Mrechtsvooruit(D8);       //rechter motor naar achter rijden int1 hbrug 1
+
+DigitalIn pin_ECHO(D11); // Echo pin
+DigitalOut pin_TRIG(D12); // Trigger pin
+
+InterruptIn drukkonp_1(D9, PullDown);
+InterruptIn drukkonp_2(D13, PullDown); 
+
+AnalogIn lijnsensorlinks(A0);           //input signaal lijnsensoren
+AnalogIn lijnsensorrechts(A1);
+AnalogIn Halsensor(A2);                 //input halsensor
+
+PwmOut PWMrechts(D6);               //pwm output signaal rechterwiel
+PwmOut PWMlinks(D1);                //pwm output signaal linkerwiel
+PwmOut PWMomhoog(D10);              //pwm output signaal Omhoog/omlaag
+PwmOut PWMaflever(A5);              //pwm output signaal afleverenpakket
+
+float lijnsensor_variable_l1 = 0;   //variablen voor keuze van lijn volgen 
+float lijnsensor_variable_R1 = 0;
+float lijnsensor_variable_l2 = 0;
+float lijnsensor_variable_R2 = 0;
+
+float getDistance_cm();             // floats voor ultrasoonsensor
+float Ultra_cm(void);
+
+
+void Stop () {
+    Mlinksvooruit=1;           // welke kant draait de linker motor op
+    Mlinksachteruit=0;
+
+    PWMlinks= 0 ;           // Dutycycle instellen PWMlinks
+
+    Mrechtsvooruit=1;
+    Mrechtsachteruit=0;
+
+    PWMrechts=0 ;
+}
+
+void Vooruit () {
+    Mlinksvooruit=1;           // welke kant draait de linker motor op
+    Mlinksachteruit=0;
+
+    PWMlinks.period(0.001);   // Periode tijd instellen PWMlinks
+    PWMlinks= 0.4 ;           // Dutycycle instellen PWMlinks
+
+    Mrechtsvooruit=1;
+    Mrechtsachteruit=0;
+
+    PWMrechts.period(0.001);
+    PWMrechts=0.4 ;
+}
+
+void Rechtsaf (){
+    Mlinksvooruit=1;           // welke kant draait de linker motor op
+    Mlinksachteruit=0;
+
+    PWMlinks.period(0.001);   // Periode tijd instellen PWMlinks
+    PWMlinks=0.7  ;           // Dutycycle instellen PWMlinks
+
+    Mrechtsvooruit=1;
+    Mrechtsachteruit=0;
+
+    PWMrechts.period(0.001);
+    PWMrechts=0.3 ;
+}
+
+void Linksaf () {
+    Mlinksvooruit=1;           // welke kant draait de linker motor op
+    Mlinksachteruit=0;
+
+    PWMlinks.period(0.001);   // Periode tijd instellen PWMlinks
+    PWMlinks=0.3  ;           // Dutycycle instellen PWMlinks
+
+    Mrechtsvooruit=1;
+    Mrechtsachteruit=0;
+
+    PWMrechts.period(0.001);
+    PWMrechts=0.7 ;
+}
+void richtingcheck (){
+    lijnsensor_variable_l1 = lijnsensorlinks;
+    lijnsensor_variable_R1 = lijnsensorrechts;
+    lijnsensor_variable_l2 = lijnsensorlinks;
+    lijnsensor_variable_R2 = lijnsensorrechts;
+    wait_us(2000);
+}
+
+void afleveren()
+{   
+    //omhoog en pakket afleveren
+    Mlinksomhoog_aflevering=1;           // welke kant draaien de bijde motoren op voor de aflevermeganisme.
+    Mrechtsomhoog_aflevering=0;
+
+    PWMomhoog.period(0.001);   // Periode tijd instellen PWM (tijd timmen voor hoe snel over doet om omhoog te gaan) 
+    PWMomhoog= 0.75 ;           // Dutycycle instellen PWMomhoog
+
+    PWMaflever.period(0.001);  // Periode tijd instellen PWM (tijd timmen voor hoe snel over doet om aftelevern te gaan)
+    PWMaflever=0.9 ;            // Dutycycle instellen PWMafleveren
+
+    wait_us (1000000);
+    //pakket terug draaien en naar benenden
+    Mlinksomhoog_aflevering=0;           // welke kant draaien de bijde motoren op voor de aflevermeganisme.
+    Mrechtsomhoog_aflevering=1;
+
+    PWMaflever.period(0.001);
+    PWMaflever=0.9 ;
+
+    PWMomhoog.period(0.001);   // Periode tijd instellen PWM (tijd timmen voor hoe snel over doet om omhoog te gaan) 
+    PWMomhoog= 0.75 ;           // Dutycycle instellen PWMomhoog
+
+}
+
+void begin_afleveren()
+{
+    afleveren_marker = AAN;
+
+}
+int walk =+ 1;
+
+int main(){
+    wait_us (2000000);
+    richting = RECHTDOOR;
+    uint16_t dist = 0;
+    
+    drukkonp_1.rise(begin_afleveren);
+
+ while(1) 
+ {
+    bool timerOn = false;
+    double dist;
+
+    pin_TRIG = 1;
+    wait_us(10); 
+    pin_TRIG = 0;
+
+    while(1){
+    if(pin_ECHO && !timerOn){
+        timerMeasureUS.start();
+        timerOn = true;
+    }
+        if(timerOn){
+            timerMeasureUS.stop();
+            double pulseDuration = timerMeasureUS.elapsed_time().count(); // in microseconde
+            double pulseDurationseconde = pulseDuration / 1000000; //in seconde
+            dist = pulseDurationseconde * 343 *100/2;
+            break; 
+        }
+    }
+    
+    timerMeasureUS.reset();
+
+ if (afleveren_marker == AAN)   //afleveren van pakket handmatig
+ {
+     Stop();
+     wait_us (1000000);
+     afleveren();
+
+     afleveren_marker = UIT;
+ }
+ else if( dist <= 10 ) // afstand berijkt met ultrasoon sensor
+ {
+     Stop();
+     led1 = true;
+ }
+ else {
+ switch(richting){ 
+    case RECHTDOOR:
+        richtingcheck();
+        if(Halsensor < 0.6475    ||  Halsensor > 0.6750)
+        {
+            richting = AFLEVEREN;
+        } 
+        else if (lijnsensor_variable_l1 < 0.3f)
+        {
+            richting = LINKS;
+        }
+        else if (lijnsensor_variable_R1 < 0.3f)
+        {
+            richting = RECHTS;
+        }
+        else if (lijnsensor_variable_l2 >= 0.3f && lijnsensor_variable_R2 >= 0.3f)
+        {
+          Vooruit(); 
+        }
+
+        break;
+
+    case LINKS:
+        richtingcheck();
+        if(Halsensor < 0.6475    ||  Halsensor > 0.6750)
+        {
+            richting = AFLEVEREN;
+        } 
+        else if (lijnsensor_variable_R1 < 0.3f)
+        {
+            richting = RECHTS;
+        }    
+        else if(lijnsensor_variable_l2 >= 0.3f && lijnsensor_variable_R2 >= 0.3f)
+        {
+            richting = RECHTDOOR;
+        }
+      
+        Linksaf(); 
+        break;
+    case RECHTS:
+        richtingcheck();
+        if(Halsensor < 0.6475    ||  Halsensor > 0.6750)
+        {
+            richting = AFLEVEREN;
+        } 
+        else if (lijnsensor_variable_l1 < 0.3f)
+        {
+            richting = LINKS;
+        }    
+        else if(lijnsensor_variable_l2 >= 0.3f && lijnsensor_variable_R2 >= 0.3f)
+        {
+            richting = RECHTDOOR;
+        }  
+        Rechtsaf();
+        break;
+    case AFLEVEREN:
+        Stop();
+
+        if (drukkonp_2 == 1)
+        {
+        led1 = 1;
+
+        afleveren();
+
+        richting = RECHTDOOR;
+        /*
+        
+        */
+        }
+        break;
+    case DEFAULT:  
+        break;{}
+    }
+ }
+ }
+}    
